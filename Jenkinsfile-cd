@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "maleknassar/vprofile-app:latest"
+        INVENTORY_FILE = "inventory.ini"    // Ansible inventory with your EC2 IP
+        PLAYBOOK_FILE = "deploy.yml"         // Ansible playbook file
+    }
+
+    stages {
+        stage('Pull Docker Image') {
+            steps {
+                sh "docker pull ${DOCKER_IMAGE}"
+            }
+        }
+
+        stage('Deploy to EC2 via Ansible') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                    sh """
+                        ansible-playbook -i ${INVENTORY_FILE} \
+                        --private-key ${SSH_KEY} \
+                        ${PLAYBOOK_FILE}
+                    """
+                }
+            }
+        }
+    }
+}

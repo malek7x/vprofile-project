@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  app:
+    image: maleknassar/vprofile-app:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mariadb
+      - memcached
+      - rabbitmq
+    environment:
+      - JDBC_URL=jdbc:mysql://mariadb:3306/accounts?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull
+      - JDBC_USERNAME=admin
+      - JDBC_PASSWORD=admin123
+    networks:
+      - vprofile-net
+
+  mariadb:
+    image: mariadb:10.6
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: accounts
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin123
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - vprofile-net
+
+  memcached:
+    image: memcached:latest
+    container_name: memcached
+    ports:
+      - "11211:11211"
+    networks:
+      - vprofile-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: test
+      RABBITMQ_DEFAULT_PASS: test
+    networks:
+      - vprofile-net
+
+networks:
+  vprofile-net:
+
+volumes:
+  mariadb_data:
