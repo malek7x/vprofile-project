@@ -13,19 +13,22 @@ pipeline {
             }
         }
 
-        stage('Build WAR') {
-            steps {
-                // Run Maven inside Docker to build WAR (avoids needing Maven on Jenkins itself)
-                sh '''
-                docker run --rm -v $PWD:/app -w /app maven:3.9.6-eclipse-temurin-17 mvn clean package
-                '''
-            }
-        }
+        // stage('Build WAR') {
+        //     steps {
+        //         // Run Maven inside Docker to build WAR (avoids needing Maven on Jenkins itself)
+        //         // sh '''
+        //         // docker run --rm -v $PWD:/app -w /app maven:3.9.6-eclipse-temurin-17 mvn clean package
+        //         // '''
+        //         sh '''
+        //         docker build -t 
+        //         '''
+        //     }
+        // }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    def tag = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+                    def tag = "v-${env.BUILD_NUMBER}"
                     dockerImage = docker.build("${IMAGE_NAME}:${tag}")
                 }
             }
