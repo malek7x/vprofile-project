@@ -2,51 +2,34 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-creds') 
-        IMAGE_NAME = 'maleknassar/vprofile'           
+        DOCKER_IMAGE_NAME = 'maleknassar/vprofile-app'
+        DOCKER_IMAGE_TAG  = 'latest'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'local', url: 'https://github.com/malek7x/vprofile-project.git'
             }
         }
 
-        // stage('Build WAR') {
-        //     steps {
-        //         // Run Maven inside Docker to build WAR (avoids needing Maven on Jenkins itself)
-        //         // sh '''
-        //         // docker run --rm -v $PWD:/app -w /app maven:3.9.6-eclipse-temurin-17 mvn clean package
-        //         // '''
-        //         sh '''
-        //         docker build -t 
-        //         '''
-        //     }
-        // }
-
         stage('Build Docker Image') {
             steps {
-                script {
-                    def tag = "v-${env.BUILD_NUMBER}"
-                    dockerImage = docker.build("${IMAGE_NAME}:${tag}")
-                }
+                sh 'docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .'
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                sh "echo ${DOCKER_HUB_CREDENTIALS_PSW} | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin"
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    dockerImage.push()
-                    // Optionally push 'latest' tag too
-                    dockerImage.push('latest')
-                }
+                sh 'docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG'
             }
         }
     }
