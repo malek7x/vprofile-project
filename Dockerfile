@@ -13,8 +13,9 @@ RUN mvn clean package
 # ========================
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
-COPY --from=builder /app/target/*.jar vprofile.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "vprofile.jar"]
+COPY --from=builder /app/target/*.war vprofile.war
+ENTRYPOINT ["java", "-jar", "vprofile.war"]
+
 
 
