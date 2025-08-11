@@ -17,7 +17,7 @@ pipeline {
             steps {
                 // Run Maven inside Docker to build WAR (avoids needing Maven on Jenkins itself)
                 sh '''
-                docker run --rm -v $PWD:/app -w /app maven:3.9.4-openjdk-17 mvn clean package
+                docker run --rm -v $PWD:/app -w /app maven:3.9.6-eclipse-temurin-17 mvn clean package
                 '''
             }
         }
