@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "mydockerhubuser/vprofile-app:latest"
+        DOCKER_IMAGE = "maleknassar/vprofile-app:latest"
         APP_SERVER = "ubuntu@13.49.77.215"
     }
 
