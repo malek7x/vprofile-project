@@ -1,0 +1,11 @@
+---
+- name: Install git, docker, and docker-compose using bash commands
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.shell: apt update -y
+
+    - name: Install git, docker.io, docker-compose
+      ansible.builtin.shell: apt install -y git docker.io docker-compose

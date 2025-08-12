@@ -2,26 +2,39 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "maleknassar/vprofile-app:latest"
-        INVENTORY_FILE = "inventory.ini"    // Ansible inventory with your EC2 IP
-        PLAYBOOK_FILE = "deploy.yml"         // Ansible playbook file
+        DOCKER_IMAGE = "mydockerhubuser/vprofile-app:latest"
+        APP_SERVER = "ubuntu@13.49.77.215"
     }
 
     stages {
-        stage('Pull Docker Image') {
+        stage('Clone Repo') {
             steps {
-                sh "docker pull ${DOCKER_IMAGE}"
+                git branch: 'local', url: 'https://github.com/malek7x/vprofile-project.git'
             }
         }
 
-        stage('Deploy to EC2 via Ansible') {
+        stage('Build Docker Image') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
-                    sh """
-                        ansible-playbook -i ${INVENTORY_FILE} \
-                        --private-key ${SSH_KEY} \
-                        ${PLAYBOOK_FILE}
-                    """
+                sh 'docker build -t $DOCKER_IMAGE .'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker push $DOCKER_IMAGE'
+                }
+            }
+        }
+
+        stage('Deploy to App Server') {
+            steps {
+                sshagent(['ec2-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no $APP_SERVER \
+                    "docker pull $DOCKER_IMAGE && docker stop app || true && docker rm app || true && docker run -d --name app -p 8080:8080 $DOCKER_IMAGE"
+                    '''
                 }
             }
         }
